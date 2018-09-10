@@ -3,9 +3,9 @@
 
 开发环境：
 
-* CentOS 7 64bit，内核 3.10.0-862；
-* g++ (GCC) 4.8.5 20150623 (Red Hat 4.8.5-28)；
-* cmake version 2.8.12.2；
+* Linux；
+* g++；
+* cmake；
 * EZOpenSDK v1.3.0 20180829；
 
 ## 0x01 为啥搞这个？
@@ -20,11 +20,35 @@
 
 ## 0x02 开撸
 
-萤石云提供的 Server SDK 是基于 CentOS（在 Ubuntu 14.04 64bit 上进行开发的时候，遇到动态库链接问题，按道理说理应可以正常链接，没花时间研究，直接切成 CentOS 继续开发）。
+萤石云提供的 Server SDK 是基于 CentOS，在其他 Linux 平台理论上也是可以编译运行的。
 
-所以在 CentOS 7 64bit 上，下载代码后直接编译即可。
+由于官方 `libezviz_streamclient.so` 文件的 ELF 头中，缺少部分引用到的 so 文件说明，需要手动添加一下，才能在其他平台良好的运行。
+
+1. 安装 [patchelf](https://nixos.org/patchelf.html) 工具;
+
+2. 修改 `libezviz_streamclient.so` 文件：
+
+   ``` sh
+   patchelf --add-needed libprotobuf.so libezviz_streamclient.so
+   patchelf --add-needed libys_net.so libezviz_streamclient.so
+   patchelf --add-needed libssl.so.1.0.0 libezviz_streamclient.so
+   patchelf --add-needed libopensslwrap.so libezviz_streamclient.so
+   ```
+
+3. 编译：
+
+   ``` sh
+   cmake CMakeLists.txt;
+   make;
+   ```
 
 ## 0x03 开跑
+
+设置链接 so 位置：
+
+``` sh
+export LD_LIBRARY_PATH=thirdparty/EZServerOpenSDK/libs
+```
 
 命令行参数：
 
