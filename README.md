@@ -1,6 +1,13 @@
 # EZOpenAPP-Linux
 基于 [萤石云 Server SDK](https://open.ys7.com/lazydownload.html) 的 Linux Server 版本录制程序。
 
+开发环境：
+
+* CentOS 7 64bit，内核 3.10.0-862；
+* g++ (GCC) 4.8.5 20150623 (Red Hat 4.8.5-28)；
+* cmake version 2.8.12.2；
+* EZOpenSDK v1.3.0 20180829；
+
 ## 0x01 为啥搞这个？
 
 使用萤石的监控，在某些场景下，仅需要出问题的时候，去看一下当时的回放。但是内置 SD 卡上的回放视频，不一定所有场景都能抓取到。
@@ -16,6 +23,24 @@
 萤石云提供的 Server SDK 是基于 CentOS（在 Ubuntu 14.04 64bit 上进行开发的时候，遇到动态库链接问题，按道理说理应可以正常链接，没花时间研究，直接切成 CentOS 继续开发）。
 
 所以在 CentOS 7 64bit 上，下载代码后直接编译即可。
+
+## 0x03 开跑
+
+命令行参数：
+
+``` shell
+Usage:
+  ./EZOpenApp-Linux --channel INTEGER32 --platform STRING --app_key STRING --serial STRING --safe_key STRING --token STRING
+```
+
+| 参数     | 含义             | 说明                                                         | 是否必填 |
+| -------- | ---------------- | ------------------------------------------------------------ | -------- |
+| channel  | 设备通道号       | 1                                                            | 否       |
+| platform | 开放平台后台地址 | 国内默认地址为：`https://open.ys7.com`，海外默认地址为：`https://open.ezvizlife.com` | 是       |
+| app_key  | 产品唯一标识     | 开发者应当在开放平台申请                                     | 是       |
+| serial   | 摄像机序列号     | 在摄像机说明书或者摄像机上注明                               | 是       |
+| safe_key | 摄像机验证码     | 在摄像机说明书或者摄像机上注明                               | 是       |
+| token    | 访问令牌         | 用于校验接口访问/调用是否有权限，有效期为7天，有效期内不需要重复申请，可以重复使用 | 是       |
 
 
 
