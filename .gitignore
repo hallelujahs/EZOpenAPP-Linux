@@ -1,2 +1,15 @@
+# cmake files
 cmake-build-debug
+build
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+CMakeFiles
+EZOpenApp-Linux
+
+# idea files
 .idea
+
+# temp data
+*.log
+*.mp4
