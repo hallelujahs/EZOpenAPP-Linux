@@ -143,9 +143,9 @@ class DeviceInfo(ctypes.Structure):
     ES_DEVICE_INFO
     """
     _fields_ = [
-        (dev_serial, ctypes.c_char * 64),
-        (dev_channel_no, ctypes.c_int),
-        (safe_key, ctypes.c_char * 16)
+        ('dev_serial', ctypes.c_char * 64),
+        ('dev_channel_no', ctypes.c_int),
+        ('safe_key', ctypes.c_char * 16)
     ]
 
 
@@ -154,10 +154,10 @@ class RecordInfo(ctypes.Structure):
     ES_RECORD_INFO
     """
     _fields_ = [
-        (start_time, ctypes.c_char * 32),
-        (stop_time, ctypes.c_char * 32),
-        (rec_type, ctypes.c_int),
-        (download_path, ctypes.c_char * 64)
+        ('start_time', ctypes.c_char * 32),
+        ('stop_time', ctypes.c_char * 32),
+        ('rec_type', ctypes.c_int),
+        ('download_path', ctypes.c_char * 64)
     ]
 
 
@@ -166,9 +166,9 @@ class StreamCallback(ctypes.Structure):
     ES_STREAM_CALLBACK
     """
     _fields_ = [
-        (on_recvmessage, ES_OPENSDK_MESSAGE_CALLBACK),
-        (on_recvdata, ES_OPENSDK_DATA_CALLBACK),
-        (user, ctypes.c_void_p)
+        ('on_recvmessage', ES_OPENSDK_MESSAGE_CALLBACK),
+        ('on_recvdata', ES_OPENSDK_DATA_CALLBACK),
+        ('user', ctypes.c_void_p)
     ]
 
 
