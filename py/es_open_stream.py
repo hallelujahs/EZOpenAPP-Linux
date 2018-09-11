@@ -1,19 +1,7 @@
 # !/usr/bin/python3
 # -- coding: utf-8 --
 # Author: winking324
-import os
 import ctypes
-import logging
-import platform
-
-logging.basicConfig(level=logging.INFO)
-
-LOGGER = logging.getLogger('EZApp')
-PLATFORM = str(platform.system()).lower()
-
-BASE_PATH = os.path.split(os.path.realpath(__file__))[0]
-SDK_PATH = '/../thirdparty/EZServerOpenSDK/libs/'
-SHARED_OBJECT = 'libezserveropensdk.so'
 
 
 """
@@ -143,9 +131,9 @@ class DeviceInfo(ctypes.Structure):
     ES_DEVICE_INFO
     """
     _fields_ = [
-        ('dev_serial', ctypes.c_char * 64),
+        ('dev_serial', ctypes.c_char_p),
         ('dev_channel_no', ctypes.c_int),
-        ('safe_key', ctypes.c_char * 16)
+        ('safe_key', ctypes.c_char_p)
     ]
 
 
@@ -154,10 +142,10 @@ class RecordInfo(ctypes.Structure):
     ES_RECORD_INFO
     """
     _fields_ = [
-        ('start_time', ctypes.c_char * 32),
-        ('stop_time', ctypes.c_char * 32),
+        ('start_time', ctypes.c_char_p),
+        ('stop_time', ctypes.c_char_p),
         ('rec_type', ctypes.c_int),
-        ('download_path', ctypes.c_char * 64)
+        ('download_path', ctypes.c_char_p)
     ]
 
 
@@ -178,8 +166,14 @@ class IESOpenStream:
 
     def load_dll(self):
         if self.__lib is not None:
-            return
-        self.__lib = ctypes.CDLL(BASE_PATH + SDK_PATH + SHARED_OBJECT)
+            return True
+
+        try:
+            self.__lib = ctypes.CDLL('libezserveropensdk.so')
+        except Exception as e:
+            print('load shared object error:', repr(e))
+            return False
+        return True
 
     def es_open_sdk_init(self, tcp_max_threads=12, ssl_max_threads=1):
         """
@@ -224,7 +218,7 @@ class IESOpenStream:
         self.__lib.ESOpenSDK_GetDevInfo.argtypes = (ctypes.c_char_p, DeviceInfo, ctypes.c_bool,
                                                     ctypes.POINTER(ctypes.c_void_p), ctypes.POINTER(ctypes.c_int))
         self.__lib.ESOpenSDK_GetDevInfo.restype = ctypes.c_int
-        self.__lib.ESOpenSDK_GetDevInfo(token, dev_info, update, out_dev_info, out_len)
+        return self.__lib.ESOpenSDK_GetDevInfo(token, dev_info, update, out_dev_info, out_len)
 
     def es_open_sdk_search_video_record(self, token, dev_info, rec_info, out_rec_info, out_len):
         """
@@ -238,13 +232,13 @@ class IESOpenStream:
                                                            ctypes.POINTER(ctypes.c_void_p),
                                                            ctypes.POINTER(ctypes.c_int))
         self.__lib.ESOpenSDK_SearchVideoRecord.restype = ctypes.c_int
-        self.__lib.ESOpenSDK_SearchVideoRecord(token, dev_info, rec_info, out_rec_info, out_len)
+        return self.__lib.ESOpenSDK_SearchVideoRecord(token, dev_info, rec_info, out_rec_info, out_len)
 
     def es_open_sdk_free_data(self, buf):
         """
         void ESOpenSDK_FreeData(void* pBuf);
         """
-        self.__lib.ESOpenSDK_FreeData.argtypes = ctypes.c_void_p
+        self.__lib.ESOpenSDK_FreeData.argtypes = [ctypes.c_void_p]
         self.__lib.ESOpenSDK_FreeData(buf)
 
     def es_open_sdk_set_video_level(self, token, dev_info, video_level):
@@ -255,7 +249,7 @@ class IESOpenStream:
         """
         self.__lib.ESOpenSDK_SetVideoLevel.argtypes = (ctypes.c_char_p, DeviceInfo, ctypes.c_int)
         self.__lib.ESOpenSDK_SetVideoLevel.restype = ctypes.c_int
-        self.__lib.ESOpenSDK_SetVideoLevel(token, dev_info, video_level)
+        return self.__lib.ESOpenSDK_SetVideoLevel(token, dev_info, video_level)
 
     def es_open_sdk_start_real_play(self, token, dev_info, callback, handler):
         """
@@ -267,15 +261,15 @@ class IESOpenStream:
         self.__lib.ESOpenSDK_StartRealPlay.argtypes = (ctypes.c_char_p, DeviceInfo, StreamCallback,
                                                        ctypes.POINTER(ctypes.c_void_p))
         self.__lib.ESOpenSDK_StartRealPlay.restype = ctypes.c_int
-        self.__lib.ESOpenSDK_StartRealPlay(token, dev_info, callback, handler)
+        return self.__lib.ESOpenSDK_StartRealPlay(token, dev_info, callback, handler)
 
     def es_open_sdk_stop_real_play(self, handler):
         """
         int ESOpenSDK_StopRealPlay(const HANDLE pHandle);
         """
-        self.__lib.ESOpenSDK_StopRealPlay.argtypes = ctypes.c_void_p
+        self.__lib.ESOpenSDK_StopRealPlay.argtypes = [ctypes.c_void_p]
         self.__lib.ESOpenSDK_StopRealPlay.restype = ctypes.c_int
-        self.__lib.ESOpenSDK_StopRealPlay(handler)
+        return self.__lib.ESOpenSDK_StopRealPlay(handler)
 
     def es_open_sdk_start_play_back(self, token, dev_info, rec_info, callback, handler):
         """
@@ -288,15 +282,15 @@ class IESOpenStream:
         self.__lib.ESOpenSDK_StartPlayBack.argtypes = (ctypes.c_char_p, DeviceInfo, RecordInfo,
                                                        StreamCallback, ctypes.POINTER(ctypes.c_void_p))
         self.__lib.ESOpenSDK_StartPlayBack.restype = ctypes.c_int
-        self.__lib.ESOpenSDK_StartPlayBack(token, dev_info, rec_info, callback, handler)
+        return self.__lib.ESOpenSDK_StartPlayBack(token, dev_info, rec_info, callback, handler)
 
     def es_open_sdk_stop_play_back(self, handler):
         """
         int ESOpenSDK_StopPlayBack(const HANDLE pHandle);
         """
-        self.__lib.ESOpenSDK_StopPlayBack.argtypes = ctypes.c_void_p
+        self.__lib.ESOpenSDK_StopPlayBack.argtypes = [ctypes.c_void_p]
         self.__lib.ESOpenSDK_StopPlayBack.restype = ctypes.c_int
-        self.__lib.ESOpenSDK_StopPlayBack(handler)
+        return self.__lib.ESOpenSDK_StopPlayBack(handler)
 
     def es_open_sdk_start_voice_talk(self, token, dev_info, callback, handler):
         """
@@ -308,15 +302,15 @@ class IESOpenStream:
         self.__lib.ESOpenSDK_StartVoiceTalk.argtypes = (ctypes.c_char_p, DeviceInfo, StreamCallback,
                                                         ctypes.POINTER(ctypes.c_void_p))
         self.__lib.ESOpenSDK_StartVoiceTalk.restype = ctypes.c_int
-        self.__lib.ESOpenSDK_StartVoiceTalk(token, dev_info, callback, handler)
+        return self.__lib.ESOpenSDK_StartVoiceTalk(token, dev_info, callback, handler)
 
     def es_open_sdk_stop_voice_talk(self, handler):
         """
         int ESOpenSDK_StopVoiceTalk(const HANDLE pHandle);
         """
-        self.__lib.ESOpenSDK_StopVoiceTalk.argtypes = ctypes.c_void_p
+        self.__lib.ESOpenSDK_StopVoiceTalk.argtypes = [ctypes.c_void_p]
         self.__lib.ESOpenSDK_StopVoiceTalk.restype = ctypes.c_int
-        self.__lib.ESOpenSDK_StopVoiceTalk(handler)
+        return self.__lib.ESOpenSDK_StopVoiceTalk(handler)
 
     def es_open_sdk_send_voice_talk(self, handler, data, data_length):
         """
@@ -324,17 +318,55 @@ class IESOpenStream:
         """
         self.__lib.ESOpenSDK_SendVoiceTalk.argtypes = (ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint8), ctypes.c_int)
         self.__lib.ESOpenSDK_SendVoiceTalk.restype = ctypes.c_int
-        self.__lib.ESOpenSDK_SendVoiceTalk(handler, data, data_length)
+        return self.__lib.ESOpenSDK_SendVoiceTalk(handler, data, data_length)
 
 
 def main():
-    if 'linux' not in PLATFORM:
-        print('not supported system:', PLATFORM)
+    import time
+    import platform
+    import argparse
+
+    platform_info = str(platform.system()).lower()
+    if 'linux' not in platform_info:
+        print('not supported system:', platform_info)
         return
 
     interface = IESOpenStream()
-    interface.load_dll()
-    interface.es_open_sdk_init()
+    if not interface.load_dll():
+        return
+
+    args_parser = argparse.ArgumentParser()
+    args_parser.add_argument('--channel', type=int, default=1)
+    args_parser.add_argument('--platform', type=str, default='https://open.ys7.com')
+    args_parser.add_argument('--app_key', type=str, required=True)
+    args_parser.add_argument('--serial', type=str, required=True)
+    args_parser.add_argument('--safe_key', type=str, required=True)
+    args_parser.add_argument('--token', type=str, required=True)
+    params = args_parser.parse_args()
+
+    if interface.es_open_sdk_init() < 0:
+        print('es open sdk init failed')
+        return
+
+    def on_message(handle, code, event_type, user):
+        print('on message', handle, code, event_type, user)
+
+    def on_data(handle, data_type, buf, length, user):
+        print('on data', handle, data_type, buf.decode(), length, user)
+
+    interface.es_open_sdk_init_with_app_key(params.app_key.encode(), params.platform.encode())
+    device_info = DeviceInfo(params.serial.encode(), params.channel, params.safe_key.encode())
+    stream_callback = StreamCallback(ES_OPENSDK_MESSAGE_CALLBACK(on_message), ES_OPENSDK_DATA_CALLBACK(on_data),
+                                     ctypes.c_void_p(None))
+
+    handler = ctypes.c_void_p(None)
+    status = interface.es_open_sdk_start_real_play(params.token.encode(), device_info, stream_callback,
+                                                   ctypes.pointer(handler))
+
+    if status == ES_API_CODE_NOERROR:
+        time.sleep(10)
+
+    interface.es_open_sdk_stop_real_play(handler)
     interface.es_open_sdk_fini()
 
 
