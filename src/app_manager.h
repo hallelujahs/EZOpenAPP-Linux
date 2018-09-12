@@ -6,6 +6,9 @@
 
 
 #include <ESOpenStream.h>
+
+#include <string>
+
 #include "app_config.h"
 
 
@@ -21,6 +24,10 @@ class AppManager {
   int Init();
 
   int SaveRealPlay();
+
+  void OnMessage(int code, int event_type);
+
+  void OnData(uint32_t data_type, const std::string &buffer);
 
  private:
   HANDLE handler_;

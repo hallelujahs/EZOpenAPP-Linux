@@ -15,24 +15,30 @@ namespace ez_open_app {
 
 
 int MessageCallback(HANDLE handler, int code, int event_type, void *user_data) {
-  (void)user_data;
-  std::cout << "phandle: " << handler << ", code: " << code
-            << ", event type: " << event_type << std::endl;
+  (void)handler;
+  (void)code;
+
+  if (user_data == nullptr)
+    return 0;
+
+  auto *app_manager = reinterpret_cast<AppManager *>(user_data);
+  app_manager->OnMessage(code, event_type);
   return 0;
 }
 
-FILE *kSaved = nullptr;
 
 int DataCallBack(HANDLE handler, uint32_t data_type, uint8_t *buf,
                  uint32_t length, void* user_data) {
-  (void)user_data;
-  std::cout << "handler: " << handler << ", data type: " << data_type
-            << ", buffer size: " << length << std::endl;
-  if (kSaved == nullptr) {
-    kSaved = ::fopen("./test.mp4", "wb");
-  }
+  (void)handler;
 
-  ::fwrite(buf, sizeof(uint8_t), length, kSaved);
+  if (user_data == nullptr)
+    return 0;
+
+  auto *data = reinterpret_cast<char *>(buf);
+  auto *app_manager = reinterpret_cast<AppManager *>(user_data);
+
+  std::string buffer(data, length);
+  app_manager->OnData(data_type, buffer);
   return 0;
 }
 
@@ -45,10 +51,6 @@ AppManager::AppManager() {
 AppManager::~AppManager() {
   ESOpenSDK_StopRealPlay(handler_);
   ESOpenSDK_Fini();
-
-  if (kSaved != nullptr) {
-    ::fclose(kSaved);
-  }
 }
 
 int AppManager::Init() {
@@ -71,7 +73,9 @@ int AppManager::SaveRealPlay() {
   ES_STREAM_CALLBACK callback_info;
   callback_info.on_recvmessage = MessageCallback;
   callback_info.on_recvdata = DataCallBack;
-  callback_info.pUser = nullptr;
+  callback_info.pUser = this;
+
+  std::cout << this << std::endl;
 
   std::cout << "call start real play" << std::endl;
   int res = ESOpenSDK_StartRealPlay(app_config_->token.c_str(), device_info,
@@ -83,5 +87,14 @@ int AppManager::SaveRealPlay() {
   return res;
 }
 
+void AppManager::OnMessage(int code, int event_type) {
+  std::cout << "on message, code: " << code << ", event type: "
+            << event_type << std::endl;
+}
+
+void AppManager::OnData(uint32_t data_type, const std::string &buffer) {
+  std::cout << "on data, data type: " << data_type << ", buffer length: "
+            << buffer.size() << std::endl;
+}
 
 }  // namespace ez_open_app
